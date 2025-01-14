@@ -67,6 +67,12 @@
         .progress-labels .liber {
             color: #27ae60;
         }
+        .cantitate-tone {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 10px;
+        }
         .results {
             margin-top: 10px;
             font-size: 14px;
@@ -137,6 +143,7 @@
                                 <span class="ocupat" id="ocupatText${i}">Ocupat: 0 t</span>
                                 <span class="liber" id="liberText${i}">Liber: 0 t</span>
                             </div>
+                            <p id="cantitateTone${i}" class="cantitate-tone">Cantitate: 0 t</p>
                         </div>
                         <div class="results">
                             <p>Volum Total: <span id="volumTotal${i}" class="value">0</span> m³</p>
@@ -178,12 +185,14 @@
             const tone = (hectolitri * greutateHL) / 1000;
 
             // Calcul pentru înălțimea conului pe baza procentului de umplere
-            // Când procentul de umplere este 0, inaltimeCon ar trebui să fie -6.50
-            // Când procentul de umplere este 100, inaltimeCon ar trebui să fie 6.50
             const inaltimeConNoua = -6.50 + (procentUmplere / 100) * 13; // +6.50 - (-6.50) = 13
 
             // Actualizare înălțimea conului
             inaltimeCon = inaltimeConNoua;
+
+            // Animație CSS pentru modificarea înălțimii conului
+            document.getElementById(`razaCon${index}`).style.transition = "height 0.5s ease";
+            document.getElementById(`razaCon${index}`).style.height = `${inaltimeConNoua}px`;
 
             // Actualizează SVG-ul
             const progressArc = document.getElementById(`progressArc${index}`);
@@ -196,6 +205,9 @@
             document.getElementById(`volumTotal${index}`).textContent = volumTotal.toFixed(2);
             document.getElementById(`volumOcupat${index}`).textContent = volumOcupat.toFixed(2);
             document.getElementById(`cantitate${index}`).textContent = tone.toFixed(1);
+
+            // Actualizează cantitatea de tone sub bara de progres
+            document.getElementById(`cantitateTone${index}`).textContent = `Cantitate: ${tone.toFixed(1)} t`;
         }
     </script>
 </body>
