@@ -162,7 +162,7 @@
             const razaCilindru = parseFloat(document.getElementById(`razaCilindru${index}`).value);
             const inaltimeCilindru = parseFloat(document.getElementById(`inaltimeCilindru${index}`).value);
             const razaCon = parseFloat(document.getElementById(`razaCon${index}`).value);
-            const inaltimeCon = parseFloat(document.getElementById(`inaltimeCon${index}`).value);
+            let inaltimeCon = parseFloat(document.getElementById(`inaltimeCon${index}`).value);
             const spatiuGol = parseFloat(document.getElementById(`spatiuGol${index}`).value);
             const greutateHL = parseFloat(document.getElementById(`greutateHL${index}`).value);
             const tipProdus = document.getElementById(`tipProdus${index}`).value;
@@ -177,6 +177,15 @@
             const hectolitri = volumOcupat * 10;
             const tone = (hectolitri * greutateHL) / 1000;
 
+            // Calcul pentru înălțimea conului pe baza procentului de umplere
+            // Când procentul de umplere este 0, inaltimeCon ar trebui să fie -6.50
+            // Când procentul de umplere este 100, inaltimeCon ar trebui să fie 6.50
+            const inaltimeConNoua = -6.50 + (procentUmplere / 100) * 13; // +6.50 - (-6.50) = 13
+
+            // Actualizare înălțimea conului
+            inaltimeCon = inaltimeConNoua;
+
+            // Actualizează SVG-ul
             const progressArc = document.getElementById(`progressArc${index}`);
             progressArc.style.strokeDasharray = `${(410 * procentUmplere) / 100} 410`;
             progressArc.style.stroke = CULORI_PRODUSE[tipProdus];
