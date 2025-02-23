@@ -81,7 +81,15 @@
             'orz': '#ff69b4',
             'floarea-soarelui': '#95a5a6'
         };
-
+        
+        const GREUTATE_HECTOLITRICA = {
+            'grau': 0.78,
+            'porumb': 0.72,
+            'rapita': 0.62,
+            'orz': 0.65,
+            'floarea-soarelui': 0.45
+        };
+        
         const trendSiloz = {};
         let trendChart;
         
@@ -127,7 +135,8 @@
             const tipProdus = document.getElementById(`tipProdus${index}`).value;
             
             const volumCilindru = Math.PI * Math.pow(razaCilindru, 2) * inaltimeCilindru;
-            const tone = volumCilindru * 0.75;
+            const densitate = GREUTATE_HECTOLITRICA[tipProdus];
+            const tone = volumCilindru * densitate;
             
             trendSiloz[index].push(tone);
             if (trendSiloz[index].length > 10) {
