@@ -85,6 +85,13 @@
         .results .value {
             color: #2980b9;
         }
+        .trend-history {
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .trend-history span {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -129,6 +136,7 @@
                         <div class="input-group">
                             <label>Spațiu Gol Măsurat (m):</label>
                             <input type="number" id="spatiuGol${i}" value="0" onchange="calculeazaSiloz(${i})">
+                            <button onclick="fetchWebServiceValue(${i})">Adaugă Valoare</button>
                         </div>
                         <div class="progress-container">
                             <svg width="200" height="120" viewBox="0 0 300 180">
@@ -149,6 +157,9 @@
                             <p>Volum Ocupat: <span id="volumOcupat${i}" class="value">0</span> m³</p>
                             <p>Cantitate: <span id="cantitate${i}" class="value">0</span> tone</p>
                         </div>
+                        <div class="trend-history" id="trendHistory${i}">
+                            <strong>Istoric Trenduri:</strong>
+                        </div>
                     </div>
                 `);
             }
@@ -167,8 +178,29 @@
         const ajustareInaltimeCon = 6.5; // Înălțimea conului inițial
         const ajustarePas = 0.5; // Ajustare la fiecare trend
 
-        // Variabilă pentru a urmări cantitatea anterioară
+        // Variabilă pentru a urmări cantitatea anterioară și istoric
         let cantitateAnterioara = new Array(9).fill(0);
+        let istoricTrenduri = new Array(9).fill([]).map(() => []);
+
+        function fetchWebServiceValue(index) {
+            const url = "http://192.168.1.10/api/siloz/" + index; // Adaptează URL-ul pentru a accesa API-ul tău
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Presupunem că valoarea dorită este în data.spațiuGol
+                    const spatiuGol = data.spațiuGol; 
+                    document.getElementById(`spatiuGol${index}`).value = spatiuGol;
+                    calculeazaSiloz(index); // Recalculează silozul după actualizarea valorii
+                })
+                .catch(error => {
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+        }
 
         function calculeazaSiloz(index) {
             const razaCilindru = parseFloat(document.getElementById(`razaCilindru${index}`).value);
@@ -180,7 +212,7 @@
             const tipProdus = document.getElementById(`tipProdus${index}`).value;
 
             const volumCilindru = Math.PI * Math.pow(razaCilindru, 2) * inaltimeCilindru;
-            const volumCon = (1 / 3) * Math.PI * Math.pow(razaCon, 2) * inaltimeCon;
+            const volumCon = (1/3) * Math.PI * Math.pow(razaCon, 2) * inaltimeCon;
             const volumTotal = volumCilindru + volumCon;
             const volumGol = Math.PI * Math.pow(razaCilindru, 2) * spatiuGol;
             const volumOcupat = volumTotal - volumGol;
@@ -192,10 +224,16 @@
             // Ajustare înălțime con în funcție de trend
             if (tone > cantitateAnterioara[index - 1]) {
                 inaltimeCon += ajustarePas; // Crește înălțimea conului
+                istoricTrenduri[index - 1].push(`+${ajustarePas}m (crescut)`);
             } else if (tone < cantitateAnterioara[index - 1]) {
                 inaltimeCon -= ajustarePas; // Scade înălțimea conului
+                istoricTrenduri[index - 1].push(`-${ajustarePas}m (scăzut)`);
             }
             cantitateAnterioara[index - 1] = tone; // Actualizare cantitate anterioară
+
+            // Actualizează istoric trenduri
+            const trendHistoryElement = document.getElementById(`trendHistory${index}`);
+            trendHistoryElement.innerHTML = '<strong>Istoric Trenduri:</strong><br>' + istoricTrenduri[index - 1].join('<br>');
 
             // Actualizare SVG-ul
             const progressArc = document.getElementById(`progressArc${index}`);
