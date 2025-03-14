@@ -3,254 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator Siloz - 9 Celule</title>
+    <title>Monitorizare Siloz Cereale - 9 Celule</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f0f2f5;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-        .siloz-container {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            width: 300px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .siloz-header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .input-group {
-            margin: 10px 0;
-        }
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #34495e;
-        }
-        .input-group input, .input-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #bdc3c7;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .progress-container {
-            text-align: center;
-            margin: 15px 0;
-        }
-        .progress-container svg {
-            display: block;
-            margin: 0 auto;
-        }
-        .progress-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        .progress-labels .ocupat {
-            color: #e67e22;
-        }
-        .progress-labels .liber {
-            color: #27ae60;
-        }
-        .cantitate-tone {
-            font-size: 16px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-top: 10px;
-        }
-        .results {
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        .results p {
-            margin: 5px 0;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .results .value {
-            color: #2980b9;
-        }
-        .trend-history {
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        .trend-history span {
-            display: block;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .cells-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+        .cell { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9f9f9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .cell h3 { text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
+        .cylinder-container { display: flex; justify-content: center; align-items: center; margin: 15px 0; }
+        .cylinder { width: 80px; height: 160px; background: #e0e0e0; border: 2px solid #000; border-radius: 40px; position: relative; overflow: hidden; }
+        .fill { width: 100%; background: yellow; position: absolute; bottom: 0; transition: height 0.3s; }
+        .cylinder-labels { margin-left: 15px; text-align: left; font-size: 14px; }
+        .chart-container { height: 180px; margin-top: 15px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        .modal-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
+        .modal-buttons button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+        .modal-buttons button.confirm { background: #4CAF50; color: white; }
+        .modal-buttons button.cancel { background: #f44336; color: white; }
+        .trend { margin-top: 10px; font-weight: bold; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <script>
-            for (let i = 1; i <= 9; i++) {
-                document.write(`
-                    <div class="siloz-container">
-                        <div class="siloz-header">
-                            <h3>Siloz S${i}</h3>
-                        </div>
-                        <div class="input-group">
-                            <label>Rază cilindru (m):</label>
-                            <input type="number" id="razaCilindru${i}" value="11.17" onchange="calculeazaSiloz(${i})">
-                        </div>
-                        <div class="input-group">
-                            <label>Înălțime cilindru (m):</label>
-                            <input type="number" id="inaltimeCilindru${i}" value="16.40" onchange="calculeazaSiloz(${i})">
-                        </div>
-                        <div class="input-group">
-                            <label>Rază con (m):</label>
-                            <input type="number" id="razaCon${i}" value="11.17" onchange="calculeazaSiloz(${i})">
-                        </div>
-                        <div class="input-group">
-                            <label>Înălțime con (m):</label>
-                            <input type="number" id="inaltimeCon${i}" value="6.50" onchange="calculeazaSiloz(${i})">
-                        </div>
-                        <div class="input-group">
-                            <label>Tip Produs:</label>
-                            <select id="tipProdus${i}" onchange="calculeazaSiloz(${i})">
-                                <option value="grau">Grâu</option>
-                                <option value="porumb">Porumb</option>
-                                <option value="rapita">Rapiță</option>
-                                <option value="orz">Orz</option>
-                                <option value="floarea-soarelui">Floarea Soarelui</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <label>Greutate Hectolitrică (kg/hl):</label>
-                            <input type="number" id="greutateHL${i}" value="0" onchange="calculeazaSiloz(${i})">
-                        </div>
-                        <div class="input-group">
-                            <label>Spațiu Gol Măsurat (m):</label>
-                            <input type="number" id="spatiuGol${i}" value="0" onchange="calculeazaSiloz(${i})">
-                            <button onclick="fetchWebServiceValue(${i})">Adaugă Valoare</button>
-                        </div>
-                        <div class="progress-container">
-                            <svg width="200" height="120" viewBox="0 0 300 180">
-                                <path id="baseArc${i}" d="M 20,150 A 130,130 0 0,1 280,150"
-                                    fill="none" stroke="#2ecc71" stroke-width="20"/>
-                                <path id="progressArc${i}" d="M 20,150 A 130,130 0 0,1 280,150"
-                                    fill="none" stroke="#f1c40f" stroke-width="20" stroke-dasharray="0 410"/>
-                                <text x="150" y="80" text-anchor="middle" font-size="18" font-weight="bold" id="percentageText${i}">0%</text>
-                            </svg>
-                            <div class="progress-labels">
-                                <span class="ocupat" id="ocupatText${i}">Ocupat: 0 t</span>
-                                <span class="liber" id="liberText${i}">Liber: 0 t</span>
-                            </div>
-                            <p id="cantitateTone${i}" class="cantitate-tone">Cantitate: 0 t</p>
-                        </div>
-                        <div class="results">
-                            <p>Volum Total: <span id="volumTotal${i}" class="value">0</span> m³</p>
-                            <p>Volum Ocupat: <span id="volumOcupat${i}" class="value">0</span> m³</p>
-                            <p>Cantitate: <span id="cantitate${i}" class="value">0</span> tone</p>
-                        </div>
-                        <div class="trend-history" id="trendHistory${i}">
-                            <strong>Istoric Trenduri:</strong>
-                        </div>
-                    </div>
-                `);
-            }
-        </script>
+        <div class="header">
+            <h1>Monitorizare Siloz Cereale - 9 Celule</h1>
+        </div>
+        <div class="cells-grid" id="cellsGrid"></div>
+    </div>
+
+    <!-- Modal pentru setarea parametrilor -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Setare Parametri</h3>
+            <form id="modalForm">
+                <div class="form-group">
+                    <label for="modalRadius">Raza cilindrului (m):</label>
+                    <input type="number" id="modalRadius" step="0.01" value="11.17" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalHeightCylinder">Înălțimea cilindrului (m):</label>
+                    <input type="number" id="modalHeightCylinder" step="0.01" value="16.40" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalRadiusCone">Raza conului (m):</label>
+                    <input type="number" id="modalRadiusCone" step="0.01" value="11.17" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalHeightCone">Înălțimea conului (m):</label>
+                    <input type="number" id="modalHeightCone" step="0.01" value="6.50" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalProduct">Produs:</label>
+                    <select id="modalProduct" required>
+                        <option value="grau">Grâu</option>
+                        <option value="porumb">Porumb</option>
+                        <option value="floareaSoarelui">Floarea Soarelui</option>
+                        <option value="orz">Orz</option>
+                        <option value="rapita">Rapiță</option>
+                        <option value="mazareGalbena">Mazăre Galbenă</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="modalWeight">Greutate hectolitrică (kg/m³):</label>
+                    <input type="number" id="modalWeight" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="modalEmptySpace">Nivel măsurat (m):</label>
+                    <input type="number" id="modalEmptySpace" step="0.01" required>
+                </div>
+            </form>
+            <div class="modal-buttons">
+                <button class="confirm" onclick="confirmParameters()">Confirmă</button>
+                <button class="cancel" onclick="closeModal()">Anulează</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        const CULORI_PRODUSE = {
-            'grau': '#f1c40f',
-            'porumb': '#e67e22',
-            'rapita': '#3498db',
-            'orz': '#ff69b4',
-            'floarea-soarelui': '#95a5a6'
+        const productColors = {
+            grau: 'gold',
+            porumb: 'orange',
+            floareaSoarelui: 'blue',
+            orz: 'pink',
+            rapita: 'purple',
+            mazareGalbena: 'gray'
         };
+        const cellsData = {};
+        let currentCellId = null;
 
-        const ajustareInaltimeCon = 6.5; // Înălțimea conului inițial
-        const ajustarePas = 0.5; // Ajustare la fiecare trend
+        // Funcția de calcul a volumului și masei
+        function calculateVolumeAndMass(radiusCylinder, radiusCone, heightCylinder, heightCone, level, weight) {
+            let volume, mass;
 
-        // Variabilă pentru a urmări cantitatea anterioară și istoric
-        let cantitateAnterioara = new Array(9).fill(0);
-        let istoricTrenduri = new Array(9).fill([]).map(() => []);
+            // Nivelul total de cereale (măsurat + înălțimea conului)
+            const totalLevel = level + heightCone;
 
-        function fetchWebServiceValue(index) {
-            const url = "http://192.168.1.10/api/siloz/" + index; // Adaptează URL-ul pentru a accesa API-ul tău
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Presupunem că valoarea dorită este în data.spațiuGol
-                    const spatiuGol = data.spațiuGol; 
-                    document.getElementById(`spatiuGol${index}`).value = spatiuGol;
-                    calculeazaSiloz(index); // Recalculează silozul după actualizarea valorii
-                })
-                .catch(error => {
-                    console.error('There was a problem with the fetch operation:', error);
-                });
-        }
-
-        function calculeazaSiloz(index) {
-            const razaCilindru = parseFloat(document.getElementById(`razaCilindru${index}`).value);
-            const inaltimeCilindru = parseFloat(document.getElementById(`inaltimeCilindru${index}`).value);
-            const razaCon = parseFloat(document.getElementById(`razaCon${index}`).value);
-            let inaltimeCon = parseFloat(document.getElementById(`inaltimeCon${index}`).value);
-            const spatiuGol = parseFloat(document.getElementById(`spatiuGol${index}`).value);
-            const greutateHL = parseFloat(document.getElementById(`greutateHL${index}`).value);
-            const tipProdus = document.getElementById(`tipProdus${index}`).value;
-
-            const volumCilindru = Math.PI * Math.pow(razaCilindru, 2) * inaltimeCilindru;
-            const volumCon = (1/3) * Math.PI * Math.pow(razaCon, 2) * inaltimeCon;
-            const volumTotal = volumCilindru + volumCon;
-            const volumGol = Math.PI * Math.pow(razaCilindru, 2) * spatiuGol;
-            const volumOcupat = volumTotal - volumGol;
-
-            const procentUmplere = (volumOcupat / volumTotal) * 100;
-            const hectolitri = volumOcupat * 10;
-            const tone = (hectolitri * greutateHL) / 1000;
-
-            // Ajustare înălțime con în funcție de trend
-            if (tone > cantitateAnterioara[index - 1]) {
-                inaltimeCon += ajustarePas; // Crește înălțimea conului
-                istoricTrenduri[index - 1].push(`+${ajustarePas}m (crescut)`);
-            } else if (tone < cantitateAnterioara[index - 1]) {
-                inaltimeCon -= ajustarePas; // Scade înălțimea conului
-                istoricTrenduri[index - 1].push(`-${ajustarePas}m (scăzut)`);
+            if (totalLevel <= 0) {
+                // Silozul este gol
+                volume = 0;
+            } else if (totalLevel <= heightCylinder) {
+                // Cerealele sunt doar în cilindru
+                volume = Math.PI * Math.pow(radiusCylinder, 2) * totalLevel;
+            } else if (totalLevel <= heightCylinder + heightCone) {
+                // Cerealele sunt atât în cilindru, cât și în con
+                const volumeCylinder = Math.PI * Math.pow(radiusCylinder, 2) * heightCylinder;
+                const volumeCone = (1 / 3) * Math.PI * Math.pow(radiusCone, 2) * (totalLevel - heightCylinder);
+                volume = volumeCylinder + volumeCone;
+            } else {
+                // Silozul este plin (nivelul depășește înălțimea totală)
+                const volumeCylinder = Math.PI * Math.pow(radiusCylinder, 2) * heightCylinder;
+                const volumeCone = (1 / 3) * Math.PI * Math.pow(radiusCone, 2) * heightCone;
+                volume = volumeCylinder + volumeCone;
             }
-            cantitateAnterioara[index - 1] = tone; // Actualizare cantitate anterioară
 
-            // Actualizează istoric trenduri
-            const trendHistoryElement = document.getElementById(`trendHistory${index}`);
-            trendHistoryElement.innerHTML = '<strong>Istoric Trenduri:</strong><br>' + istoricTrenduri[index - 1].join('<br>');
+            // Calculul masei în tone (fără împărțire la 1000)
+            mass = (volume * weight) / 1000;
 
-            // Actualizare SVG-ul
-            const progressArc = document.getElementById(`progressArc${index}`);
-            progressArc.style.strokeDasharray = `${(410 * procentUmplere) / 100} 410`;
-            progressArc.style.stroke = CULORI_PRODUSE[tipProdus];
-
-            document.getElementById(`percentageText${index}`).textContent = `${procentUmplere.toFixed(1)}%`;
-            document.getElementById(`ocupatText${index}`).textContent = `Ocupat: ${tone.toFixed(1)} t`;
-            document.getElementById(`liberText${index}`).textContent = `Liber: ${(volumTotal - volumOcupat).toFixed(1)} m³`;
-            document.getElementById(`volumTotal${index}`).textContent = volumTotal.toFixed(2);
-            document.getElementById(`volumOcupat${index}`).textContent = volumOcupat.toFixed(2);
-            document.getElementById(`cantitate${index}`).textContent = tone.toFixed(1);
-
-            // Actualizează cantitatea de tone sub bara de progres
-            document.getElementById(`cantitateTone${index}`).textContent = `Cantitate: ${tone.toFixed(1)} t`;
-            document.getElementById(`inaltimeCon${index}`).value = inaltimeCon.toFixed(2); // Actualizare valoare input
+            return { volume, mass };
         }
+
+        // Funcția de determinare a trendului
+        function determineTrend(cellId, currentLevel) {
+            const history = cellsData[cellId].history;
+            const timestamps = cellsData[cellId].timestamps;
+
+            if (history.length === 0) {
+                return "Trend: Stabil"; // Nu există date istorice
+            }
+
+            const previousLevel = history[history.length - 1];
+            const previousTimestamp = timestamps[timestamps.length - 1];
+            const currentTime = new Date();
+
+            // Verifică dacă diferența de timp este mai mică de 5 secunde
+            if ((currentTime - previousTimestamp) / 1000 <= 5) {
+                if (currentLevel > previousLevel) {
+                    return "Trend: Încărcare";
+                } else if (currentLevel < previousLevel) {
+                    return "Trend: Descărcare";
+                } else {
+                    return "Trend: Stabil";
+                }
+            }
+
+            return "Trend: Stabil"; // Dacă diferența de timp este prea mare
+        }
+
+        // Inițializează celulele și graficele
+        function initializeCells() {
+            const cellsGrid = document.getElementById('cellsGrid');
+            cellsGrid.innerHTML = '';
+            for (let i = 1; i <= 9; i++) {
+                cellsData[i] = { chart: null, history: [], timestamps: [] };
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${i}`;
+                cell.innerHTML = `
+                    <h3>Celula ${i}</h3>
+                    <p>Produs: <span id="productDisplay-${i}">-</span></p>
+                    <p>Nivel: <span id="level-${i}">-</span> m</p>
+                    <p>Capacitate: <span id="capacity-${i}">-</span> t</p>
+                    <div class="cylinder-container">
+                        <div class="cylinder">
+                            <div id="fill-${i}" class="fill" style="height: 0%;"></div>
+                        </div>
+                        <div class="cylinder-labels">
+                            <p id="percent-${i}">0%</p>
+                            <p id="volume-${i}">0 t</p>
+                            <p id="empty-${i}">0 t gol</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-${i}"></canvas>
+                    </div>
+                    <div class="trend" id="trend-${i}">Trend: -</div>
+                    <button type="button" onclick="openModal(${i})">Setare Parametri</button>
+                `;
+                cellsGrid.appendChild(cell);
+
+                // Inițializează graficul pentru fiecare celulă
+                const ctx = document.getElementById(`chart-${i}`).getContext('2d');
+                cellsData[i].chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: `Celula ${i}`,
+                            data: [],
+                            borderColor: productColors.grau,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Deschide modalul pentru setarea parametrilor
+        function openModal(cellId) {
+            currentCellId = cellId;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        // Închide modalul
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Confirmă parametrii și actualizează celula
+        function confirmParameters() {
+            const radiusCylinder = parseFloat(document.getElementById('modalRadius').value);
+            const radiusCone = parseFloat(document.getElementById('modalRadiusCone').value);
+            const heightCylinder = parseFloat(document.getElementById('modalHeightCylinder').value);
+            const heightCone = parseFloat(document.getElementById('modalHeightCone').value);
+            const level = parseFloat(document.getElementById('modalEmptySpace').value);
+            const weight = parseFloat(document.getElementById('modalWeight').value);
+            const product = document.getElementById('modalProduct').value;
+
+            // Calculează volumul și masa
+            const { volume, mass } = calculateVolumeAndMass(radiusCylinder, radiusCone, heightCylinder, heightCone, level, weight);
+
+            // Actualizează afișajul
+            document.getElementById(`productDisplay-${currentCellId}`).textContent = product;
+            document.getElementById(`level-${currentCellId}`).textContent = level.toFixed(2);
+            document.getElementById(`capacity-${currentCellId}`).textContent = mass.toFixed(2) + ' t';
+            document.getElementById(`fill-${currentCellId}`).style.height = `${((level + heightCone) / (heightCylinder + heightCone)) * 100}%`;
+            document.getElementById(`fill-${currentCellId}`).style.backgroundColor = productColors[product];
+            document.getElementById(`percent-${currentCellId}`).textContent = `${((level + heightCone) / (heightCylinder + heightCone)) * 100}%`;
+            document.getElementById(`volume-${currentCellId}`).textContent = `${volume.toFixed(2)} m³`;
+            document.getElementById(`empty-${currentCellId}`).textContent = `${(heightCylinder + heightCone - level - heightCone).toFixed(2)} m gol`;
+
+            // Determină trendul
+            const trend = determineTrend(currentCellId, level);
+            document.getElementById(`trend-${currentCellId}`).textContent = trend;
+
+            // Actualizează istoricul
+            cellsData[currentCellId].history.push(level);
+            cellsData[currentCellId].timestamps.push(new Date());
+
+            // Actualizează graficul
+            const chart = cellsData[currentCellId].chart;
+            chart.data.labels.push(new Date().toLocaleTimeString());
+            chart.data.datasets[0].data.push(mass);
+            chart.update();
+
+            closeModal();
+        }
+
+        // Inițializează celulele la încărcarea paginii
+        window.onload = function() {
+            initializeCells();
+        };
     </script>
 </body>
 </html>
